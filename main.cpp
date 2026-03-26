@@ -2,12 +2,12 @@
 using namespace std;
 #include "mfloat.cpp"
 
-typedef _mfloat<70, 2, 20, -20> mfloat;
+typedef _mfloat<10, 30, 20, -20> mfloat;
 
 int main(){
-    cout << fixed << setprecision(20);
+    cout << fixed << setprecision(30);
 
-    double ori = 10.501234560000;
+    long double ori = 10.501234560000000000;
 
     mfloat x(ori);
 

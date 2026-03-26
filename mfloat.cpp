@@ -5,7 +5,7 @@
 using namespace std;
 #define ld long double
 
-template<const int MANT, const int BASE, int EXPMAX, int EXPMIN>
+template<const int BASE, const int MANT, int EXPMAX, int EXPMIN>
 struct _mfloat {
     typedef _mfloat<MANT, BASE, EXPMAX, EXPMIN> mfloat;
 
@@ -17,10 +17,14 @@ struct _mfloat {
         // m1 . m2 m3 * BASE^exp  |  mi < BASE
 
         exp = 0;
-        while(exp > EXPMIN && (int)x % BASE == 0) exp--, x *= BASE;
+        while(exp > EXPMIN && ((int)x % BASE == 0 && (int)x / BASE == 0)) exp--, x *= BASE;
         while(exp < EXPMAX && (int)x / BASE >= 1) exp++, x /= BASE;
         
-        for(auto &m : mant) m = (int)x % BASE, x *= BASE; //pega a parte inteira
+        for(auto &m : mant){
+            int digi = (int)x;
+            m = digi;
+            x = (x - digi) * BASE; 
+        }
     }
 
     ld toDouble(){
@@ -65,6 +69,13 @@ struct _mfloat {
     mfloat& operator-= (const mfloat m){ return *this = *this - m; }
     mfloat& operator*= (const mfloat m){ return *this = *this * m; }
     mfloat& operator/= (const mfloat m){ return *this = *this / m; }
+
+    bool operator==(const mfloat m){ return this->sign == m.sign && this->exp == m.exp && this.mant == m.mant; }
+    bool operator< (const mfloat m){ return tie(this->sign, this->exp, this->mant) < tie(m.sign, m.exp, m.mant); }
+    bool operator<=(const mfloat m){ return  (*this <  m) || (*this == m); }
+    bool operator> (const mfloat m){ return !(*this <= m); }
+    bool operator>=(const mfloat m){ return !(*this <  m); }
+    bool operator!=(const mfloat m){ return !(*this == m); }
 
     private:
     array<int, MANT> mant;
