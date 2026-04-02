@@ -13,6 +13,7 @@ struct _mfloat {
     _mfloat(array<int, MANT> mant, int exp) : mant(mant), exp(exp) {}
     _mfloat(ld x){
         if(x < 0) sign = -1, x *= -1;
+        else sign = +1;
 
         // m1 . m2 m3 * BASE^exp  |  mi < BASE
 
@@ -29,27 +30,15 @@ struct _mfloat {
         // arredonda?
     }
 
-    ld toDouble(){
-        ld ans = 0;
-
-        for(int i=(int)mant.size()-1; i>=0; i--) ans = ans / BASE + mant[i];
-
-        for(int i=exp; i > 0; i--) ans *= BASE;
-        for(int i=exp; i < 0; i++) ans /= BASE;
-
-        return ans;
-    }
-
-    void printReal(){
-        cout << mant[0] << ".";
-        for(int i=1; i<mant.size(); i++) cout << (BASE > 10 ? " " : "") << mant[i];
-        cout << " * " << BASE << "^" << exp << endl;
-    }
-
-    mfloat operator+ (const mfloat m) const {
+    mfloat operator+ (mfloat m) const {
+        if(this->sign != m.sign){ // x + (-y) = x - y
+            m.sign *= -1;
+            return *this - m;
+        }
         // aumenta a mantissa e iguala a base
         auto a = this->extend();
         auto b = m.extend();
+
         
         a.shiftL(MANT - 1); // 0 . m1 m2 m3 0 0
         b.shiftL(MANT - 1); // 0 . m1 m2 m3 0 0
@@ -70,6 +59,8 @@ struct _mfloat {
 
         mfloat ans;
         ans.exp = sum.exp;
+        ans.sign = sum.sign;
+
         for(int i=0; i<ans.mant.size(); i++)
             ans.mant[i] = sum.mant[i];
 
@@ -78,8 +69,50 @@ struct _mfloat {
         return ans;
     } 
 
-    mfloat operator- (const mfloat m) const {
+    mfloat operator- (mfloat m) const {
+        if(this->sign != m.sign){ // x - (-y) = x + y
+            m.sign *= -1;
+            return *this + m;
+        }
+        // aumenta a mantissa e iguala a base
+        auto a = this->extend();
+        auto b = m.extend();
+
+        
+        a.shiftL(MANT - 1); // 0 . m1 m2 m3 0 0
+        b.shiftL(MANT - 1); // 0 . m1 m2 m3 0 0
+        (a.exp < b.exp ? a : b).shiftR(abs(a.exp - b.exp)); //a.exp = b.exp
+        // --- //
+        
+        if(a < b) swap(a, b);
+
+        auto sub = a;
+        int carry = 0;
+        for(int i=a.mant.size()-1; i >= 0; i--){
+            sub.mant[i] = a.mant[i] - (b.mant[i] + carry);
+            carry = 0;
+            if(sub.mant[i] < 0){
+                int v = sub.mant[i];
+                carry = (abs(v) + BASE - 1) / BASE; // teto da divisão pra ficar positivo
+                sub.mant[i] = BASE + v % BASE;
+            }
+            carry = sub.mant[i] / BASE;
+            sub.mant[i] %= BASE;
+        }
+
+        assert(carry == 0);
+
+        sub.fix();
+
         mfloat ans;
+        ans.exp = sub.exp;
+        for(int i=0; i<ans.mant.size(); i++)
+            ans.mant[i] = sub.mant[i];
+        
+        ans.sign = a.sign;
+
+        // arredonda?
+
         return ans;
     }
 
@@ -98,12 +131,32 @@ struct _mfloat {
     mfloat& operator*= (const mfloat m){ return *this = *this * m; }
     mfloat& operator/= (const mfloat m){ return *this = *this / m; }
 
-    bool operator==(const mfloat m){ return this->sign == m.sign && this->exp == m.exp && this.mant == m.mant; }
-    bool operator< (const mfloat m){ return tie(this->sign, this->exp, this->mant) < tie(m.sign, m.exp, m.mant); }
-    bool operator<=(const mfloat m){ return  (*this <  m) || (*this == m); }
-    bool operator> (const mfloat m){ return !(*this <= m); }
-    bool operator>=(const mfloat m){ return !(*this <  m); }
-    bool operator!=(const mfloat m){ return !(*this == m); }
+    bool operator==(const mfloat m) const { return this->sign == m.sign && this->exp == m.exp && this.mant == m.mant; }
+    bool operator< (const mfloat m) const { return tie(this->sign, this->exp, this->mant) < tie(m.sign, m.exp, m.mant); }
+    bool operator<=(const mfloat m) const { return  (*this <  m) || (*this == m); }
+    bool operator> (const mfloat m) const { return !(*this <= m); }
+    bool operator>=(const mfloat m) const { return !(*this <  m); }
+    bool operator!=(const mfloat m) const { return !(*this == m); }
+
+    ld toDouble() const{
+        ld ans = 0;
+
+        for(int i=(int)mant.size()-1; i>=0; i--) ans = ans / BASE + mant[i];
+
+        for(int i=exp; i > 0; i--) ans *= BASE;
+        for(int i=exp; i < 0; i++) ans /= BASE;
+
+        if(sign < 0) ans *= -1;
+
+        return ans;
+    }
+
+    void printReal() const {
+        if(sign < 0) cout << "-";
+        cout << mant[0] << ".";
+        for(int i=1; i<mant.size(); i++) cout << (BASE > 10 ? " " : "") << mant[i];
+        cout << " * " << BASE << "^" << exp << endl;
+    }
 
     array<int, MANT> mant;
     int exp = 0;
@@ -138,6 +191,7 @@ struct _mfloat {
         // 0 . 0 0 m1 m2 m3
         for(int i=0; i<mant.size(); i++) ans.mant[i+MANT] = mant[i];
         ans.exp = exp + MANT;
+        ans.sign = sign;
 
         return ans;
     }
