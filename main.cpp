@@ -2,19 +2,24 @@
 using namespace std;
 #include "mfloat.cpp"
 
-typedef _mfloat<10, 30, 20, -20> mfloat;
+typedef _mfloat<10, 5, 20, -20> mfloat;
 
-int main(){
+int main()
+{
     cout << fixed << setprecision(30);
 
-    long double ori = 10.501234560000000000;
+    long double val1 = 10.501234560055555555;
+    long double val2 = 10.501234560099999999;
 
-    mfloat x(ori);
+    mfloat x(val1);
+    mfloat y(val2);
 
-    cout << x.toDouble() << endl;
-    cout << mfloat(x.toDouble()).toDouble() << endl;
-    cout << ori << endl;
-    cout << x.toDouble() - ori << endl;
     x.printReal();
+    y.printReal();
 
+    mfloat sum = x + y;
+    sum.printReal();
+
+    mfloat dif = x - y;
+    dif.printReal();
 }
