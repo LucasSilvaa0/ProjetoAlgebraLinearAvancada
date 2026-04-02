@@ -29,23 +29,6 @@ using namespace std;
  *   - operadores -, *, / estao como esqueleto.
  *   - estrategia de arredondamento ainda nao foi finalizada.
  *
-
-
-
-
-        // Reconstrucao da mantissa por Horner reverso.
-        for (int i = (int)mant.size() - 1; i >= 0; i--)
-            ans = ans / BASE + mant[i];
-
-        // Aplica o expoente armazenado.
-        for (int i = exp; i > 0; i--)
-            ans *= BASE;
-        for (int i = exp; i < 0; i++)
-            ans /= BASE;
-
-        return ans;
-    }
-
  */
 
 

@@ -12,11 +12,12 @@ void testSum(long double x = 1234.56789, long double y = 34.54321){
     mfloat mx(x);
     mfloat my(y);
     mfloat sum = mx + my;
+    long double expected = x + y;
 
-    cout << x << " + " << y << " = " << x+y << endl;
+    cout << x << " + " << y << " = " << expected << endl;
     cout << mx.toDouble() << " + " << my.toDouble() << " = " << sum.toDouble() << endl;
     
-    auto error = (x+y) - sum.toDouble();
+    auto error = expected - sum.toDouble();
     cout << "\n" << "error: " << error << " or " << mfloat(error) << "\n\n";
     
     cout << mx << " + " << my << " = " << sum << endl;
@@ -28,20 +29,38 @@ void testSub(long double x = 1234.56789, long double y = 1233.56788){
     mfloat mx(x);
     mfloat my(y);
     mfloat sub = mx - my;
+    long double expected = x - y;
 
-    cout << x << " - " << y << " = " << x-y << endl;
+    cout << x << " - " << y << " = " << expected << endl;
     cout << mx.toDouble() << " - " << my.toDouble() << " = " << sub.toDouble() << endl;
     
-    auto error = (x-y) - sub.toDouble();
+    auto error = expected - sub.toDouble();
     cout << "\n" << "error: " << error << " or " << mfloat(error) << "\n\n";
     
     cout << mx << " + " << my << " = " << sub << endl;
 }
 
+void testMul(long double x = 14.59, long double y = 2.000001){
+    cout << "\n----- TESTE MUL ------\n" << endl;
+
+    mfloat mx(x);
+    mfloat my(y);
+    mfloat mul = mx * my;
+    long double expected = x * y;
+
+    cout << x << " * " << y << " = " << expected << endl;
+    cout << mx.toDouble() << " * " << my.toDouble() << " = " << mul.toDouble() << endl;
+    
+    auto error = expected - mul.toDouble();
+    cout << "\n" << "error: " << error << " or " << mfloat(error) << "\n\n";
+    
+    cout << mx << " * " << my << " = " << mul << endl;
+}
 
 int main(){
     cout << fixed << setprecision(30);
 
     testSum();
     testSub();
+    testMul();
 }
