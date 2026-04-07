@@ -1,5 +1,5 @@
-#ifndef LUZHEADER
-#define LUZHEADER
+#ifndef MFLOATHEADER
+#define MFLOATHEADER
 #include <array>
 #include <bits/stdc++.h>
 using namespace std;
@@ -49,10 +49,14 @@ struct _mfloat
 
         exp = 0;
         // Ajusta escala para que a parte inteira fique em faixa valida da base.
-        while (exp > EXPMIN && ((int)x % BASE == 0 && (int)x / BASE == 0))
+        while (exp+1 > EXPMIN && ((int)x % BASE == 0 && (int)x / BASE == 0))
             exp--, x *= BASE;
-        while (exp < EXPMAX && (int)x / BASE >= 1)
+        while (exp-1 < EXPMAX && (int)x / BASE >= 1)
             exp++, x /= BASE;
+
+        if(isnan(x)) { *this = makeNan(); return; }
+        if(exp > EXPMAX || isinf(x)) { *this = makeInf(sign); return; }
+        if(exp < EXPMIN) { *this = makeZero(sign); return; }
 
         // "Quebra" x em digitos da mantissa na base escolhida.
         for (auto &m : mant){
@@ -65,6 +69,11 @@ struct _mfloat
     }
 
     mfloat operator+ (mfloat m) const {
+        if(this->isNan() || m.isNan()) return makeNan();                                       // x + nan = nan
+        if(this->isInf() && m.isInf() && this->sign == m.sign) return makeInf(this->sign);     // +inf + +inf = +inf, -inf + -inf = -inf 
+        if(this->isInf() && m.isInf()) return makeNan();                                       // +inf + -inf = nan
+        if(this->isInf() || m.isInf()) return this->isInf() ? *this : m;                       // x + inf = inf
+
         if(this->sign != m.sign){ // x + (-y) = x - y
             m.sign *= -1;
             return *this - m;
@@ -104,10 +113,17 @@ struct _mfloat
 
         // arredonda?
 
+        if (ans.exp > EXPMAX) return makeInf(ans.sign);
+        if (ans.exp < EXPMIN) return makeZero(ans.sign);
         return ans;
     }
 
     mfloat operator- (mfloat m) const {
+        if(this->isNan() || m.isNan()) return makeNan();                                    // x - nan = nan
+        if(this->isInf() && m.isInf() && this->sign == m.sign) return makeNan();            // inf - inf = nan
+        if(this->isInf() && m.isInf()) return makeInf(this->sign);                          // +inf - -inf = +inf, -inf - +inf = -inf
+        if(this->isInf() || m.isInf()) return this->isInf() ? *this : makeInf(-m.sign);     // x - +inf = -inf
+
         if(this->sign != m.sign){ // x - (-y) = x + y
             m.sign *= -1;
             return *this + m;
@@ -153,11 +169,16 @@ struct _mfloat
 
         // arredonda?
 
+        if (ans.exp > EXPMAX) return makeInf(ans.sign);
+        if (ans.exp < EXPMIN) return makeZero(ans.sign);
         return ans;
     }
 
-    mfloat operator*(const mfloat m) const
-    {
+    mfloat operator*(const mfloat m) const {
+        if(this->isNan() || m.isNan()) return makeNan();                                          // x * nan = nan
+        if(this->isInf() && m.isZero() || this->isZero() && m.isInf()) return makeNan();          // 0 * inf = nan
+        if(this->isInf() || m.isInf()) return makeInf((this->sign < 0) ^ (m.sign < 0) ? -1 : +1); // inf * inf = inf, sinal pode mudar
+
         // 1) Aumenta a mantissa para reduzir perda durante produto.
         auto a = this->extend();
         auto b = m.extend();
@@ -168,15 +189,12 @@ struct _mfloat
 
         const int N = (int)a.mant.size(); // N = 2 * MANT
 
-        // 3) Produto das mantissas por convolucao (estilo multiplicacao longa).
+        // 2) Produto das mantissas por convolucao (estilo multiplicacao longa).
         vector<long long> raw(2 * N, 0);
+
         for (int i = N - 1; i >= 0; i--)
-        {
             for (int j = N - 1; j >= 0; j--)
-            {
                 raw[i + j + 1] += 1LL * a.mant[i] * b.mant[j];
-            }
-        }
 
         for (int i = 2 * N - 1; i > 0; i--)
         {
@@ -188,17 +206,8 @@ struct _mfloat
         int first = 0;
         while (first < 2 * N && raw[first] == 0)
             first++;
-
-        mfloat ans;
-        if (first == 2 * N)
-        {
-            // Produto nulo.
-            ans.exp = EXPMIN;
-            ans.mant.fill(0);
-            ans.sign = 0;
-            return ans;
-        }
-
+        if (first == 2 * N) return makeZero( ((this->sign < 0) ^ (m.sign < 0)) ? -1 : +1);
+        
         // 5) Monta resultado intermediario com 2*MANT digitos e expoente ajustado.
         _mfloat<BASE, MANT * 2, EXPMAX, EXPMIN> prod;
         prod.mant.fill(0);
@@ -211,10 +220,11 @@ struct _mfloat
 
         // Ajuste de escala apos truncar os digitos menos significativos.
         prod.exp = a.exp + b.exp - first + 1;
-        prod.sign = ((this->sign < 0) ^ (m.sign < 0)) ? -1 : 0;
+        prod.sign = ((this->sign < 0) ^ (m.sign < 0)) ? -1 : +1;
         prod.fix();
-
+        
         // 6) Volta para formato com MANT digitos.
+        mfloat ans;
         ans.exp = prod.exp;
         ans.sign = prod.sign;
         for (int i = 0; i < MANT; i++)
@@ -222,11 +232,68 @@ struct _mfloat
 
         // arredonda?
 
+        if (ans.exp > EXPMAX) return makeInf(ans.sign);
+        if (ans.exp < EXPMIN) return makeZero(ans.sign);
         return ans;
     }
 
     mfloat operator/ (const mfloat m) const {
+        if (this->isZero() && m.isZero()) return makeNan();                                // 0 / 0 = nan
+        if (this->isNan() || m.isNan())   return makeNan();                                // x / nan = nan
+        if (this->isInf() && m.isInf())   return makeNan();                                // inf / inf = nan
+        if (this->isInf() && m.isZero())  return *this;                                    // inf / 0 = inf
+        if (this->isInf()) return makeInf(((this->sign < 0) ^ (m.sign < 0)) ? -1 : 1);     // inf / x = inf
+        if (m.isZero())    return makeInf(this->sign);                                     // x / 0 = inf
+        if (m.isInf())     return makeZero();                                              // x / inf = 0
+
+        // 1) Aumenta a mantissa para reduzir perda.
+        auto a = this->extend();
+        auto b = m.extend();
+        const int N = (int)a.mant.size(); // N = 2 * MANT
+
+        a.fix(), b.fix();
+        auto &am = a.mant, &bm = b.mant;
+
+
+        // 2) divisão clássica 
+        vector<int> raw(N, 0);
+        for(int i = 0; i < N; i++){
+            int div = 0;
+
+            while(am >= bm && div+1 < BASE){
+                div++;
+                for(int j = N-1; j >= 0; j--){
+                    am[j] -= bm[j];
+                    if(am[j] < 0){
+                        am[j] += BASE;
+                        if(j) am[j-1]--;
+                    }
+                }
+            }
+
+            raw[i] = div;
+            for(int j = N-1; j > 0; j--) bm[j] = bm[j-1];
+            bm[0] = 0;
+        }
+
+        // 5) Monta resultado intermediario
+        _mfloat<BASE, MANT * 2, EXPMAX, EXPMIN> quoc;
+        for (int i = 0; i < N; i++) quoc.mant[i] = raw[i];
+
+        quoc.exp = a.exp - b.exp;
+        quoc.sign = ((this->sign < 0) ^ (m.sign < 0)) ? -1 : +1;
+        quoc.fix();
+
+        // 6) Volta para formato com MANT digitos.
         mfloat ans;
+        ans.exp = quoc.exp;
+        ans.sign = quoc.sign;
+        for (int i = 0; i < MANT; i++) ans.mant[i] = quoc.mant[i];
+
+        // arredonda?
+
+        if (ans.exp > EXPMAX) return makeInf(ans.sign);
+        if (ans.exp < EXPMIN) return makeZero(ans.sign);
         return ans;
     }
 
@@ -243,6 +310,8 @@ struct _mfloat
     bool operator!=(const mfloat m) const { return !(*this == m); }
 
     ld toDouble() const{
+        if(this->isInf()) return sign > 0 ? numeric_limits<ld>::infinity() : -numeric_limits<ld>::infinity();
+        if(this->isNan()) return numeric_limits<ld>::quiet_NaN();
         ld ans = 0;
 
         for(int i=(int)mant.size()-1; i>=0; i--) ans = ans / BASE + mant[i];
@@ -258,7 +327,9 @@ struct _mfloat
     void printReal() const { cout << (*this) << endl; } //depreciado, use cout << mx << endl;
 
     friend ostream& operator<<(ostream& os, const mfloat& p){
+        if(p.isNan()) return os << "nan";
         if(p.sign < 0) os << "-";
+        if(p.isInf()) return os << "inf";
         
         os << p.mant[0] << ".";
         
@@ -289,9 +360,7 @@ struct _mfloat
     void shiftR(int sh) { shiftL(-sh); }
 
     // Normaliza removendo zeros a esquerda da mantissa.
-    void fix()
-    {
-
+    void fix(){
         int dlt = 0;
         while (dlt < mant.size() && mant[dlt] == 0)
             dlt++;
@@ -299,12 +368,11 @@ struct _mfloat
         if (dlt == mant.size())
             exp = EXPMIN; // 0.00
         else
-            shiftL(dlt);
+            shiftL(min(dlt, exp - EXPMIN));
     }
 
     // Retorna um mfloat com o dobro da mantissa para calculo intermediario.
-    _mfloat<BASE, MANT * 2, EXPMAX, EXPMIN> extend() const
-    {
+    _mfloat<BASE, MANT * 2, EXPMAX, EXPMIN> extend() const {
         _mfloat<BASE, MANT * 2, EXPMAX, EXPMIN> ans;
 
         // 0 . 0 0 m1 m2 m3
@@ -315,6 +383,33 @@ struct _mfloat
 
         return ans;
     }
+
+    bool isInf() const { return abs(sign) == 2; }
+    bool isNan() const { return sign == 0; }
+    bool isZero() const {
+        if (isInf() || isNan()) return false;
+        for (auto d : mant) if (d != 0) return false;
+        return true;
+    }
+
+    static mfloat makeNan(){
+        mfloat x;
+        x.sign = 0;
+        return x;
+    }
+    static mfloat makeInf(short sgn){
+        mfloat x;
+        x.sign = (sgn < 0 ? -2 : 2);
+        return x;
+    }
+    static mfloat makeZero(short sgn = 1){
+        mfloat x;
+        x.sign = sgn;
+        x.mant.fill(0);
+        x.exp = EXPMIN;
+        return x;
+    }
+
 };
 
 #endif
