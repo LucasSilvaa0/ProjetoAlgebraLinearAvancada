@@ -9,6 +9,7 @@
 #include "analises.cpp"
 #include "matplotlibcpp.h"
 #include "algoritmos/sqrt.cpp"
+#include "algoritmos/log.cpp"
 #define ld long double
 namespace plt = matplotlibcpp;
 
@@ -85,6 +86,43 @@ void msqrt_bs(int fig){
     plt::title("Função: Sqrt com binary search");
     plt::legend();
 
+}
+
+void mloggrafico(int fig){
+
+    vector<ld> x_values;
+
+    vector<ld> y_values;
+    vector<ld> y_values2;
+    vector<ld> y_values4;
+    vector<ld> y_values6;
+    vector<ld> y_values8;
+
+    // log só definido pra x > 0
+    ld L = 0.001, R = 1;
+
+    for (ld x = L; x <= R; x += (R-L)/1000){
+        
+        x_values.push_back(x);
+
+        // versão double
+        y_values.push_back(log(x));
+
+        // versões mfloat
+        y_values2.push_back(mlog<mfloat2>(x).toDouble()); 
+        y_values4.push_back(mlog<mfloat4>(x).toDouble());
+        y_values6.push_back(mlog<mfloat6>(x).toDouble());
+        y_values8.push_back(mlog<mfloat8>(x).toDouble());
+    }
+
+    plt::figure(fig);
+    plt::named_plot("double", x_values, y_values);
+    plt::named_plot("mantissa=2", x_values, y_values2);
+    plt::named_plot("mantissa=4", x_values, y_values4);
+    plt::named_plot("mantissa=6", x_values, y_values6);
+    plt::named_plot("mantissa=8", x_values, y_values8);
+    plt::title("Função: Log");
+    plt::legend();
 }
 
 
