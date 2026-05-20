@@ -14,7 +14,7 @@ using namespace std;
 
 namespace plt = matplotlibcpp;
 
-typedef _mfloat<10, 6, 20, -20> mfloat;
+typedef _mfloat<2, 20, 20, -20> mfloat;
 
 int main()
 {
