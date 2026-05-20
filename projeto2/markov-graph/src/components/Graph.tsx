@@ -37,6 +37,20 @@ export default function Graph() {
 
     const parsed = parseFloat(newWeight);
 
+    if (newWeight == "delete") {
+      const removerArestaPorId = (remove: Edge) => {
+        setEdges((eds) => eds.filter((edge) => !(edge.source == remove.target && edge.target == remove.source)
+                                            && !(edge.target == remove.target && edge.source == remove.source)));
+      };
+
+      removerArestaPorId(edge);
+
+      let matriz = buildTransitionMatrix(nodes, edges);
+      setMatrizAtual(matriz);
+      
+      return;
+    }
+    
     if (isNaN(parsed) || parsed < 0) {
         alert('Peso inválido!');
         return;
