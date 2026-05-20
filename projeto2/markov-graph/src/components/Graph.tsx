@@ -10,7 +10,7 @@ import ReactFlow, {
   useEdgesState,
   Node,
 } from 'reactflow';
-import { buildTransitionMatrix, steadyState, distributionAfterT } from '../utils/markov';
+import { buildTransitionMatrix, distributionAfterT } from '../utils/markov';
 
 import 'reactflow/dist/style.css';
 
@@ -29,6 +29,7 @@ export default function Graph() {
   const [initialNodeIndex, setInitialNodeIndex] = useState<number>(0);
   const [steps, setSteps] = useState<number>(1);
   const [distribution, setDistribution] = useState<number[] | null>(null);
+  const [isComputing, setIsComputing] = useState(false);
 
   const onEdgeClick = (event: any, edge: Edge) => {
     const newWeight = prompt('Digite o novo peso:', edge.data?.weight || '1');
@@ -133,20 +134,26 @@ export default function Graph() {
     setIsDialogOpen(true);
   };
 
-  const computeDistribution = () => {
+  const computeDistribution = async () => {
     const matriz = matrizAtual.length > 0 ? matrizAtual : buildTransitionMatrix(nodes, edges);
     const t = Math.max(0, Math.floor(Number(steps) || 0));
 
     if (t === 0) {
-      // return initial distribution
       const init = Array(nodes.length).fill(0);
       if (initialNodeIndex >= 0 && initialNodeIndex < nodes.length) init[initialNodeIndex] = 1;
       setDistribution(init);
       return;
     }
 
-    const result = distributionAfterT(matriz, t, initialNodeIndex);
-    setDistribution(result);
+    setIsComputing(true);
+    try {
+      const result = await distributionAfterT(matriz, t, initialNodeIndex);
+      setDistribution(result);
+    } catch (error: any) {
+      alert(`Erro ao calcular distribuição: ${error.message ?? error}`);
+    } finally {
+      setIsComputing(false);
+    }
   };
 
   return (
