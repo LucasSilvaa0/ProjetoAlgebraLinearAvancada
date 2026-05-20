@@ -43,13 +43,7 @@ export default function Graph() {
                                             && !(edge.target == remove.target && edge.source == remove.source)));
       };
 
-      console.log("oi");
-      console.log(edges);
-      console.log(edge.id);
-
       removerArestaPorId(edge);
-
-      console.log(edges)
 
       let matriz = buildTransitionMatrix(nodes, edges);
       setMatrizAtual(matriz);
