@@ -6,29 +6,213 @@
 #include <sstream>
 #include <string>
 #include <vector>
-
+#include <stdexcept>
 #include "../../../projeto1/mfloat.cpp"
+using namespace std;
 
-using mfloat = _mfloat<10, 1, 2, -2>;
+using mfloat = _mfloat<2, 64, 124, -124>;
 
-static bool readLine(std::string &out) {
-    if (!std::getline(std::cin, out)) return false;
+using mfloat20 = _mfloat<10, 20, 20, -20>;
+using mfloat15 = _mfloat<10, 15, 20, -20>;
+using mfloat10 = _mfloat<10, 10, 20, -20>;
+using mfloat5  = _mfloat<10, 5,  20, -20>;
+using mfloat3  = _mfloat<10, 3,  20, -20>;
+using mfloat2  = _mfloat<10, 2,  20, -20>;
+
+
+static bool readLine(string &out);
+static bool readDouble(double &out);
+static vector<double> parseDoubles(const string &line);
+static string toJsonArray(const vector<double> &values);
+static void normalizeRows(vector<vector<double>> &matrix);
+
+
+template<typename MFloat>
+struct LinearSystem {
+    vector<vector<MFloat>> A;
+    vector<MFloat> b;
+};
+
+// Helper to extract system Ax = b from the transition matrix for steady-state calculation
+template<typename MFloat>
+LinearSystem<MFloat> extractLinearSystem(const vector<vector<MFloat>>& matrix) {
+    int n = matrix.size();
+    if (n == 0) return { {}, {} };
+
+    vector<vector<MFloat>> P(n, vector<MFloat>(n));
+    
+    for (int i = 0; i < n; i++) {
+        MFloat rowSum = MFloat::makeZero();
+        for (int j = 0; j < n; j++) rowSum += matrix[i][j];
+        
+        for (int j = 0; j < n; j++) {
+            P[i][j] = rowSum.isZero() ? MFloat(0) : matrix[i][j] / rowSum;
+        }
+    }
+
+    vector<vector<MFloat>> A(n, vector<MFloat>(n));
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            A[i][j] = P[j][i];
+            if (i == j) A[i][j] -= MFloat(1);
+        }
+    }
+
+    vector<MFloat> b(n, MFloat::makeZero());
+    int lastIndex = n - 1;
+    for (int j = 0; j < n; j++) A[lastIndex][j] = MFloat(1);
+    b[lastIndex] = MFloat(1);
+
+    return { A, b };
+}
+
+// Jacobi Solver
+template<typename MFloat>
+vector<MFloat> solveJacobi(const vector<vector<MFloat>>& A, const vector<MFloat>& b, int iterations = 100) {
+    int n = A.size();
+    vector<MFloat> x(n, MFloat(1) / MFloat(n));
+
+    for (int k = 0; k < iterations; k++) {
+        vector<MFloat> xNew(n);
+        for (int i = 0; i < n; i++) {
+            MFloat sum = MFloat::makeZero();
+            for (int j = 0; j < n; j++) {
+                if (i != j) sum += A[i][j] * x[j];
+            }
+            xNew[i] = (b[i] - sum) / A[i][i];
+        }
+        x = xNew;
+    }
+    return x;
+}
+
+// Gauss-Seidel Solver
+template<typename MFloat>
+vector<MFloat> solveGaussSeidel(const vector<vector<MFloat>>& A, const vector<MFloat>& b, int iterations = 100) {
+    int n = A.size();
+    vector<MFloat> x(n, MFloat(1) / MFloat(n));
+
+    for (int k = 0; k < iterations; k++) {
+        for (int i = 0; i < n; i++) {
+            MFloat sum = MFloat::makeZero();
+            for (int j = 0; j < n; j++) {
+                if (i != j) sum += A[i][j] * x[j];
+            }
+            x[i] = (b[i] - sum) / A[i][i];
+        }
+    }
+    return x;
+}
+
+template<typename MFloat>
+vector<vector<MFloat>> parseMatrix(const vector<vector<double>>& input) {
+    int n = input.size();
+    vector<vector<MFloat>> matrix(n, vector<MFloat>(n));
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            matrix[i][j] = MFloat(input[i][j]);
+        }
+    }
+    return matrix;
+}
+
+template<typename MFloat>
+vector<double> parseDistribution(const vector<MFloat>& dist) {
+    vector<double> result(dist.size());
+    for (size_t i = 0; i < dist.size(); i++) {
+        result[i] = static_cast<double>(dist[i]);
+    }
+    return result;
+}
+
+template<typename MFloat>
+void solverGeral(string solverMode, const vector<vector<double>>& transitionMatrix, vector<double> &distribution) {
+    auto mTransitionMatrix = parseMatrix<MFloat>(transitionMatrix);
+    auto system = extractLinearSystem(mTransitionMatrix);
+
+    if(solverMode == "jacobi") distribution = parseDistribution(solveJacobi(system.A, system.b));
+    else 
+    if(solverMode == "gauss-seidel") distribution = parseDistribution(solveGaussSeidel(system.A, system.b));
+    else throw invalid_argument("Invalid solver mode " + solverMode);
+}
+
+
+//////////////////////////////////////
+
+int main() {
+    string operation;
+    if (!readLine(operation)) return 1;
+
+    string sizeLine;
+    if (!readLine(sizeLine)) return 2;
+
+    istringstream sizeStream(sizeLine);
+    int n = 0, t = 0;
+    sizeStream >> n >> t;
+
+    if (n <= 0 || t < 0) return 3;
+
+    string solverMode;
+    if (!readLine(solverMode)) return 4;
+
+    vector<vector<double>> transitionMatrix(n, vector<double>(n));
+    for (int i = 0; i < n; i++) {
+        for(int j = 0; j < n; j++) {
+            if (!readDouble(transitionMatrix[i][j])) return 5;
+        }
+    }
+    normalizeRows(transitionMatrix);
+
+
+    string precision = "default";
+    readLine(precision);
+
+    vector<double> distribution(n);
+
+    if(precision == "default")  solverGeral<mfloat>  (solverMode, transitionMatrix, distribution);
+    else
+    if(precision == "mfloat20") solverGeral<mfloat20>(solverMode, transitionMatrix, distribution);
+    else 
+    if(precision == "mfloat15") solverGeral<mfloat15>(solverMode, transitionMatrix, distribution);
+    else
+    if(precision == "mfloat10") solverGeral<mfloat10>(solverMode, transitionMatrix, distribution);
+    else
+    if(precision == "mfloat5")  solverGeral<mfloat5> (solverMode, transitionMatrix, distribution);
+    else
+    if(precision == "mfloat3")  solverGeral<mfloat3> (solverMode, transitionMatrix, distribution);
+    else
+    if(precision == "mfloat2")  solverGeral<mfloat2> (solverMode, transitionMatrix, distribution);
+    else throw invalid_argument("Invalid precision mode " + precision);
+
+    cout << "{\"distribution\":" << toJsonArray(distribution) << "}\n";
+    return 0;
+}
+
+
+static bool readLine(string &out) {
+    if (!getline(cin, out)) return false;
     while (!out.empty() && (out.back() == '\r' || out.back() == '\n')) out.pop_back();
     return true;
 }
 
-static std::vector<double> parseDoubles(const std::string &line) {
-    std::istringstream input(line);
-    std::vector<double> values;
+static bool readDouble(double &out) {
+    cin >> out;
+    if (cin.fail()) return false;
+    return true;
+}
+
+static vector<double> parseDoubles(const string &line) {
+    istringstream input(line);
+    vector<double> values;
     double val;
     while (input >> val) values.push_back(val);
     return values;
 }
 
-static std::string toJsonArray(const std::vector<double> &values) {
-    std::ostringstream out;
+static string toJsonArray(const vector<double> &values) {
+    ostringstream out;
     out << "[";
-    out << std::fixed << std::setprecision(15);
+    out << fixed << setprecision(15);
     for (size_t i = 0; i < values.size(); ++i) {
         if (i) out << ",";
         out << values[i];
@@ -37,104 +221,17 @@ static std::string toJsonArray(const std::vector<double> &values) {
     return out.str();
 }
 
-int main() {
-    std::string operation;
-    if (!readLine(operation)) return 1;
+static void normalizeRows(vector<vector<double>> &matrix) {
+    for (size_t i = 0; i < matrix.size(); ++i) {
+        double rowSum = 0.0;
+        for (size_t j = 0; j < matrix[i].size(); ++j) {
+            rowSum += matrix[i][j];
+        }
 
-    std::string sizeLine;
-    if (!readLine(sizeLine)) return 2;
-    std::istringstream sizeStream(sizeLine);
-    int n = 0;
-    int t = 0;
-    sizeStream >> n >> t;
-    if (n <= 0 || t < 0) return 3;
+        if (rowSum == 0.0) continue;
 
-    std::string initialMode;
-    if (!readLine(initialMode)) return 4;
-
-    std::vector<double> initialVec;
-    int initialIndex = -1;
-    if (initialMode == "index") {
-        std::string indexLine;
-        if (!readLine(indexLine)) return 5;
-        initialIndex = std::stoi(indexLine);
-    } else if (initialMode == "vector") {
-        std::string vectorLine;
-        if (!readLine(vectorLine)) return 6;
-        initialVec = parseDoubles(vectorLine);
-        if ((int)initialVec.size() != n) return 7;
+        for (size_t j = 0; j < matrix[i].size(); ++j) {
+            matrix[i][j] /= rowSum;
+        }
     }
-
-    std::string matrixLine;
-    if (!readLine(matrixLine)) return 8;
-    std::vector<double> matrixValues = parseDoubles(matrixLine);
-    if ((int)matrixValues.size() != n * n) return 9;
-
-    std::vector<mfloat> matrix;
-    matrix.reserve(n * n);
-    for (double value : matrixValues) matrix.emplace_back(value);
-
-    auto normalizeRow = [&](int rowIndex) {
-        mfloat sum = mfloat::makeZero();
-        for (int j = 0; j < n; ++j) {
-            sum += matrix[rowIndex * n + j];
-        }
-        for (int j = 0; j < n; ++j) {
-            if (sum.isZero())
-                matrix[rowIndex * n + j] = mfloat::makeZero();
-            else
-                matrix[rowIndex * n + j] /= sum;
-        }
-    };
-
-    for (int i = 0; i < n; ++i) normalizeRow(i);
-
-    std::vector<mfloat> pi(n, mfloat::makeZero());
-    if (operation == "distribution") {
-        if (initialMode == "index") {
-            if (initialIndex < 0 || initialIndex >= n) return 10;
-            pi[initialIndex] = mfloat(1.0L);
-        } else if (initialMode == "vector") {
-            mfloat sum = mfloat::makeZero();
-            for (int i = 0; i < n; ++i) {
-                pi[i] = mfloat(initialVec[i]);
-                sum += pi[i];
-            }
-            if (!sum.isZero()) {
-                for (int i = 0; i < n; ++i) pi[i] /= sum;
-            }
-        } else {
-            for (int i = 0; i < n; ++i) pi[i] = mfloat(1.0L / n);
-        }
-    } else if (operation == "steady") {
-        for (int i = 0; i < n; ++i) pi[i] = mfloat(1.0L / n);
-    } else {
-        return 11;
-    }
-
-    int maxIterations = operation == "steady" ? t : t;
-    for (int step = 0; step < maxIterations; ++step) {
-        std::vector<mfloat> nextPi(n, mfloat::makeZero());
-        for (int i = 0; i < n; ++i) {
-            for (int j = 0; j < n; ++j) {
-                nextPi[j] += pi[i] * matrix[i * n + j];
-            }
-        }
-        mfloat sum = mfloat::makeZero();
-        for (int i = 0; i < n; ++i) sum += nextPi[i];
-        if (!sum.isZero()) {
-            for (int i = 0; i < n; ++i) nextPi[i] /= sum;
-        }
-        pi.swap(nextPi);
-    }
-
-    if (operation == "steady") {
-        // One extra iteration to use the same steady-state formula semantics.
-    }
-
-    std::vector<double> distribution(n);
-    for (int i = 0; i < n; ++i) distribution[i] = static_cast<double>(pi[i].toDouble());
-
-    std::cout << "{\"distribution\":" << toJsonArray(distribution) << "}\n";
-    return 0;
 }
