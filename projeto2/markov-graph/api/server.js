@@ -86,11 +86,11 @@ app.post("/api/markov/jacobi", async (req, res) => {
 
 app.post("/api/markov/gauss-seidel", async (req, res) => {
   try {
-    const { matrix, iterations, machine } = req.body;
+    const { matrix, t, machine } = req.body;
     if (!validateMatrix(matrix)) return res.status(400).json({ error: "matrix must be a square numeric array" });
-    if (typeof iterations !== "number" || iterations < 1) return res.status(400).json({ error: "iterations must be a positive number" });
+    if (typeof t !== "number" || t < 1) return res.status(400).json({ error: "iterations must be a positive number" });
 
-    const result = await runMFloat("gauss-seidel", matrix, iterations, undefined, machine);
+    const result = await runMFloat("gauss-seidel", matrix, t, undefined, machine);
     console.log("Gauss-Seidel result:", result);
     res.json(result);
   } catch (error) {
