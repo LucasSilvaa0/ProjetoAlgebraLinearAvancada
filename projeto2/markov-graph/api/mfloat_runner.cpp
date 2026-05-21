@@ -120,7 +120,7 @@ template<typename MFloat>
 vector<double> parseDistribution(const vector<MFloat>& dist) {
     vector<double> result(dist.size());
     for (size_t i = 0; i < dist.size(); i++) {
-        result[i] = static_cast<double>(dist[i]);
+        result[i] = dist[i].toDouble();
     }
     return result;
 }
@@ -133,61 +133,67 @@ void solverGeral(string solverMode, const vector<vector<double>>& transitionMatr
     if(solverMode == "jacobi") distribution = parseDistribution(solveJacobi(system.A, system.b));
     else 
     if(solverMode == "gauss-seidel") distribution = parseDistribution(solveGaussSeidel(system.A, system.b));
-    else throw invalid_argument("Invalid solver mode " + solverMode);
+    else 
+    distribution = vector<double>(system.A.size(), 0.0);
+    // throw invalid_argument("Invalid solver mode " + solverMode);
 }
 
+static void to_lower(string &s) {
+    for (char &c : s) c = tolower(c);
+}
 
 //////////////////////////////////////
 
 int main() {
     string operation;
     if (!readLine(operation)) return 1;
+    to_lower(operation);
+    // accepted modes: jacobi, gauss-seidel
 
-    string sizeLine;
-    if (!readLine(sizeLine)) return 2;
-
-    istringstream sizeStream(sizeLine);
     int n = 0, t = 0;
-    sizeStream >> n >> t;
+    {
+        string sizeLine;
+        if (!readLine(sizeLine)) return 2;
+        istringstream sizeStream(sizeLine);
+        sizeStream >> n >> t;
+        if (n <= 0 || t < 0) return 3;
+    }
 
-    if (n <= 0 || t < 0) return 3;
+    string precision = "default";
+    readLine(precision);
+    to_lower(precision);
+    // Accepted precisions: default, mfloat20, mfloat15, mfloat10, mfloat5, mfloat3, mfloat2
 
-    string solverMode;
-    if (!readLine(solverMode)) return 4;
 
     vector<vector<double>> transitionMatrix(n, vector<double>(n));
     for (int i = 0; i < n; i++) {
         for(int j = 0; j < n; j++) {
             if (!readDouble(transitionMatrix[i][j])) return 5;
-        }
-    }
-    normalizeRows(transitionMatrix);
+        }    
+    }    
 
-
-    string precision = "default";
-    readLine(precision);
-
+    normalizeRows(transitionMatrix);    
     vector<double> distribution(n);
 
-    if(precision == "default")  solverGeral<mfloat>  (solverMode, transitionMatrix, distribution);
+    if(precision == "default" || precision == "mfloat")  solverGeral<mfloat>  (operation, transitionMatrix, distribution);
     else
-    if(precision == "mfloat20") solverGeral<mfloat20>(solverMode, transitionMatrix, distribution);
+    if(precision == "mfloat20") solverGeral<mfloat20>(operation, transitionMatrix, distribution);
     else 
-    if(precision == "mfloat15") solverGeral<mfloat15>(solverMode, transitionMatrix, distribution);
+    if(precision == "mfloat15") solverGeral<mfloat15>(operation, transitionMatrix, distribution);
     else
-    if(precision == "mfloat10") solverGeral<mfloat10>(solverMode, transitionMatrix, distribution);
+    if(precision == "mfloat10") solverGeral<mfloat10>(operation, transitionMatrix, distribution);
     else
-    if(precision == "mfloat5")  solverGeral<mfloat5> (solverMode, transitionMatrix, distribution);
+    if(precision == "mfloat5")  solverGeral<mfloat5> (operation, transitionMatrix, distribution);
     else
-    if(precision == "mfloat3")  solverGeral<mfloat3> (solverMode, transitionMatrix, distribution);
+    if(precision == "mfloat3")  solverGeral<mfloat3> (operation, transitionMatrix, distribution);
     else
-    if(precision == "mfloat2")  solverGeral<mfloat2> (solverMode, transitionMatrix, distribution);
-    else throw invalid_argument("Invalid precision mode " + precision);
+    if(precision == "mfloat2")  solverGeral<mfloat2> (operation, transitionMatrix, distribution);
+    else 
+        distribution = vector<double>(n, 1.0/0.0);
 
     cout << "{\"distribution\":" << toJsonArray(distribution) << "}\n";
     return 0;
 }
-
 
 static bool readLine(string &out) {
     if (!getline(cin, out)) return false;

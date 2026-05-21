@@ -3,10 +3,10 @@
   "private": true,
   "version": "0.0.0",
   "scripts": {
-    "build": "g++ -std=c++17 -O2 mfloat_runner.cpp -o mfloat_runner.exe",
+    "build": "g++ -std=c++17 -O2 mfloat_runner.cpp -o mfloat_runner",
     "start": "node server.js"
   },
   "dependencies": {
-    "express": "^4.18.2"
+    "express": "^4.22.2"
   }
 }

@@ -28,6 +28,8 @@ export default function Graph() {
   const [matrizAtual, setMatrizAtual] = useState<number[][]>([]);
   const [initialNodeIndex, setInitialNodeIndex] = useState<number>(0);
   const [steps, setSteps] = useState<number>(1);
+  const [algorithm, setAlgorithm] = useState<string>('jacobi');
+  const [machine, setMachine] = useState<string>('default');
   const [distribution, setDistribution] = useState<number[] | null>(null);
   const [isComputing, setIsComputing] = useState(false);
 
@@ -145,9 +147,11 @@ export default function Graph() {
       return;
     }
 
+    console.log("Computing distribution with parameters:", { matriz, t, initialNodeIndex, algorithm, machine });
+
     setIsComputing(true);
     try {
-      const result = await distributionAfterT(matriz, t, initialNodeIndex);
+      const result = await distributionAfterT(matriz, t, initialNodeIndex, algorithm, machine);
       setDistribution(result);
     } catch (error: any) {
       alert(`Erro ao calcular distribuição: ${error.message ?? error}`);
@@ -213,15 +217,20 @@ export default function Graph() {
 
               <label htmlFor="algoritmo">
                 Algoritmo de cálculo:
-                <select name="algoritmo" id="algoritmo">
-                    <option value="Jacobi">Jacobi</option>
-                    <option value="Gauss-Seidel">Gauss-Seidel</option>
+                <select 
+                  name="algoritmo" 
+                  id="algoritmo"
+                  value={algorithm}
+                  onChange={(e) => setAlgorithm(e.target.value)}
+                >
+                    <option value="jacobi">jacobi</option>
+                    <option value="gauss-seidel">gauss-seidel</option>
                 </select>
               </label>
 
               <label htmlFor="maquina">
                 Máquina de cálculo:
-                <select name="maquina" id="maquina">
+                <select name="maquina" id="maquina" value={machine} onChange={(e) => setMachine(e.target.value)}>
                     <option value="default">default</option>
                     <option value="mfloat20">mfloat20</option>
                     <option value="mfloat15">mfloat15</option>

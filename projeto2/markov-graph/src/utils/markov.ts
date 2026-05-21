@@ -1,4 +1,5 @@
-import { distributionAfterTWithMFloat, steadyStateWithMFloat } from "./mfloatApi";
+import { distributionAfterTWithMFloat } from "./mfloatApi";
+import { extractLinearSystem, solveGaussSeidel, solveJacobi } from './../components/calculator'; // Importar funções de cálculo
 
 export function buildTransitionMatrix(nodes: any[], edges: any[]) {
   const n = nodes.length;
@@ -33,7 +34,7 @@ export function buildTransitionMatrix(nodes: any[], edges: any[]) {
   return matrix;
 }
 
-export { distributionAfterTWithMFloat, steadyStateWithMFloat };
+export { distributionAfterTWithMFloat };
 
 /**
  * Calcula a distribuição de probabilidade após `t` passos usando o backend C++.
@@ -45,10 +46,9 @@ export async function distributionAfterT(
   matrix: number[][],
   t: number,
   initial?: number | number[],
+  algorithm: string = 'jacobi',
+  machine: string = 'default'
 ) {
-  return distributionAfterTWithMFloat(matrix, t, initial);
+  return distributionAfterTWithMFloat(matrix, t, initial, algorithm, machine);
 }
-
-export async function steadyState(matrix: number[][], iterations = 100) {
-  return steadyStateWithMFloat(matrix, iterations);
-}
+  

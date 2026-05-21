@@ -37,22 +37,14 @@ export async function distributionAfterTWithMFloat(
   matrix: number[][],
   t: number,
   initial?: number | number[],
+  algorithm: string = 'jacobi',
+  machine: string = 'default'
 ): Promise<number[]> {
-  const result = await postJson<DistributionResponse>("/api/markov/distribution", {
+  const result = await postJson<DistributionResponse>(`/api/markov/${algorithm}`, {
     matrix,
     t,
     initial,
-  });
-  return result.distribution;
-}
-
-export async function steadyStateWithMFloat(
-  matrix: number[][],
-  iterations = 100,
-): Promise<number[]> {
-  const result = await postJson<DistributionResponse>("/api/markov/steady", {
-    matrix,
-    iterations,
+    machine,
   });
   return result.distribution;
 }
