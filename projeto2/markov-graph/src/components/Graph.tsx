@@ -211,6 +211,28 @@ export default function Graph() {
                 />
               </label>
 
+              <label htmlFor="algoritmo">
+                Algoritmo de cálculo:
+                <select name="algoritmo" id="algoritmo">
+                    <option value="Jacobi">Jacobi</option>
+                    <option value="Gauss-Seidel">Gauss-Seidel</option>
+                </select>
+              </label>
+
+              <label htmlFor="maquina">
+                Máquina de cálculo:
+                <select name="maquina" id="maquina">
+                    <option value="default">default</option>
+                    <option value="mfloat20">mfloat20</option>
+                    <option value="mfloat15">mfloat15</option>
+                    <option value="mfloat10">mfloat10</option>
+                    <option value="mfloat5">mfloat5</option>
+                    <option value="mfloat3">mfloat3</option>
+                    <option value="mfloat2">mfloat2</option>
+                </select>
+              </label>
+
+
               <button
                 onClick={computeDistribution}
                 style={{ padding: '8px 12px', marginTop: 18 }}
