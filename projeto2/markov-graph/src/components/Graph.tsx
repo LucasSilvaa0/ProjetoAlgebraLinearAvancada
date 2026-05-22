@@ -204,17 +204,6 @@ export default function Graph() {
                 </select>
               </label>
 
-              <label style={{ display: 'flex', flexDirection: 'column' }}>
-                Passos (t)
-                <input
-                  type="number"
-                  min={0}
-                  value={steps}
-                  onChange={(e) => setSteps(Number(e.target.value))}
-                  style={{ width: 100, marginTop: 6 }}
-                />
-              </label>
-
               <label htmlFor="algoritmo">
                 Algoritmo de cálculo:
                 <select 
@@ -269,7 +258,7 @@ export default function Graph() {
             </div>
 
             <div style={{ marginBottom: '12px' }}>
-              <strong>Probabilidade de estado após {steps} passo(s):</strong>
+              <strong>Vetor de probabilidade final:</strong>
               {distribution ? (
                 <div>
                   {distribution.map((v, i) => (
