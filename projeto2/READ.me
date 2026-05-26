@@ -1,0 +1,40 @@
+PROJETO MARKOV-GRAPH
+
+TEMA 6B
+
+6. Resolvedor de cadeia de Markov via grafos dirigidos: Numa tela gráfica, o usuário define
+vértices e arestas de um grafo. O sistema então duplica as arestas de forma que se
+tenha uma aresta dirigida num sentido e a outra no sentido contrário. Para cada vértice
+o sistema gera um laço. O usuário então atribui pesos a todas as arestas dirigidas. Cada
+peso de uma aresta saindo do vértice vi representa a chance que um agente tem de
+sair de vi por aquela aresta em detrimento de sair pelas outras arestas. O usuário então
+solicita que se compute o vetor de estado estacionário da cadeia de Markov
+correspondente, o que significa o vetor com as probabilidades assintóticas do objeto
+estar em cada vértice. Mas para isso o seu sistema precisa normalizar os pesos de todas
+as arestas que saem de um dado vértice em relação à soma dos pesos delas. Ou seja, a
+matriz de vértices do grafo dirigido terá cada uma de suas colunas valores cuja soma é
+1, como requer uma grandeza probabilística. Após resolver o sistema apropriado (ver
+Seção de Aplicações do livro do Anton-Rorres) por QR, ele deve colocar em cada vértice
+o valor obtido do vetor de estado estacionário. Obs: o vetor de estado estacionário só
+vai ter sua existência garantida se a cadeia de Markov for regular e, para isso,
+recomenda-se atribuir pesos não nulos aos laços, preferivelmente representando os
+maiores pesos em alguns vértices. Projeto em trio. Derivação do tema (6B): o mesmo
+enunciado, mas aplicado a uma máquina limitada, com mantissa prescrita pelo usuário,
+e sistemas lineares resolvidos por ambos os métodos iterativos estudados em aula ao
+invés de QR.
+
+
+COMO RODAR O PROJETO:
+
+Frontend:
+- Entre na pasta projeto2/markov-graph e rode:
+  npm i .
+  npm run dev
+- Entre na URL: http://localhost:5173/
+
+BACKEND:
+- Entre na pasta projeto2/markov-graph/api e rode:
+  npm i .
+  npm run build
+  npm start
+
