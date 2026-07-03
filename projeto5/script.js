@@ -1,5 +1,3 @@
-
-
 /* =========================================================================
 DADOS DO PROBLEMA — O PROBLEMA DA DIETA
 6 alimentos (variáveis de decisão) + 4 restrições (variáveis de folga)
@@ -7,12 +5,12 @@ DADOS DO PROBLEMA — O PROBLEMA DA DIETA
 ========================================================================= */
 
 const foods = [
-    { name: "Arroz", unit: "porção (100g)", c: 5 },
+    { name: "Arroz",  unit: "porção (100g)", c: 5 },
     { name: "Feijão", unit: "porção (100g)", c: 4 },
     { name: "Frango", unit: "porção (100g)", c: 3 },
-    { name: "Ovo", unit: "unidade", c: 6 },
-    { name: "Banana", unit: "unidade", c: 4 },
-    { name: "Leite", unit: "copo (200ml)", c: 2 },
+    { name: "Ovo",    unit: "unidade",       c: 6 },
+    { name: "Banana", unit: "unidade",       c: 4 },
+    { name: "Leite",  unit: "copo (200ml)",  c: 2 },
 ];
 
 // Coeficientes das restrições (A) e limites (b)
@@ -179,6 +177,8 @@ const DEFAULT_CONSTRAINTS = constraints.map((c) => ({
     ...c,
     coefs: c.coefs.slice(),
 }));
+
+
 
 /* =========================================================================
 RENDERIZAÇÃO

@@ -15,7 +15,9 @@
 
 <body>
   <div class="wrap">
+
     <header class="banner">
+    
       <div>
         <p class="banner-eyebrow">Programação Linear · Simplex Didático</p>
         <h1 class="banner-title">O Problema da Dieta</h1>
@@ -25,6 +27,7 @@
           (6 de decisão + 4 de folga).
         </p>
       </div>
+    
       <div class="banner-meta">
         Álgebra Linear Avançada para Computação — 2026.1<br />
         <b>Projeto 5</b> · Tema 1 — Problema da Dieta<br />
@@ -45,6 +48,7 @@
       <aside>
         <div class="card">
           <h3>Editar valores nutricionais</h3>
+          
           <p class="hint">
             Ajuste o valor nutricional e o consumo de recursos de cada
             alimento (xᵢ = porções). Depois clique em <b>recalcular</b> para
@@ -53,33 +57,30 @@
           <div style="overflow-x: auto">
             <table class="mini edit-table" id="foodsTable"></table>
           </div>
-          <p class="hint" style="margin: 14px 0 6px">
-            Limites das restrições (lado direito, b)
-          </p>
+          
+          <p class="hint" style="margin: 14px 0 6px"> Limites das restrições (lado direito, b) </p>
+          
           <div class="limits-grid" id="limitsGrid"></div>
           <div class="editor-actions">
-            <button class="ctrl primary" id="btnRecalc">
-              recalcular simplex
-            </button>
+            <button class="ctrl primary" id="btnRecalc"> recalcular simplex </button>
             <button class="ctrl" id="btnResetData">restaurar padrão</button>
           </div>
           <p class="edit-msg" id="editMsg"></p>
         </div>
 
-        <div class="card">
-          <h3>Função-objetivo</h3>
-          <p class="hint">
-            Maximizar o índice de valor nutricional total da dieta.
-          </p>
-          <div class="objective-box" id="objectiveBox"></div>
-        </div>
+        <div>
 
-        <div class="card">
-          <h3>Restrições</h3>
-          <p class="hint">
-            Cada restrição vira uma variável de folga (S₁…S₄).
-          </p>
-          <ul class="constraint-list" id="constraintList"></ul>
+          <div class="card">
+            <h3>Função-objetivo</h3>
+            <p class="hint"> Maximizar o índice de valor nutricional total da dieta. </p>
+            <div class="objective-box" id="objectiveBox"></div>
+          </div>
+          
+          <div class="card">
+            <h3>Restrições</h3>
+            <p class="hint"> Cada restrição vira uma variável de folga (S₁…S₄). </p>
+            <ul class="constraint-list" id="constraintList"></ul>
+          </div>
         </div>
       </aside>
 
@@ -106,22 +107,17 @@
         </div>
 
         <div class="controls">
-          <button class="ctrl" id="btnFirst" title="Ir ao início">
-            ⏮ início
-          </button>
-          <button class="ctrl" id="btnPrev" title="Passo anterior">
-            ◀ anterior
-          </button>
-          <button class="ctrl primary" id="btnPlay">▶ reproduzir</button>
-          <button class="ctrl" id="btnNext" title="Próximo passo">
-            próximo ▶
-          </button>
-          <button class="ctrl" id="btnLast" title="Ir ao fim">fim ⏭</button>
-          <div class="speed-wrap">
-            velocidade
+          <button class="ctrl" id="btnFirst" title="Ir ao início">  ⏮ início     </button>
+          <button class="ctrl" id="btnPrev" title="Passo anterior"> ◀ anterior   </button>
+          <button class="ctrl primary" id="btnPlay">                ▶ reproduzir </button>
+          <button class="ctrl" id="btnNext" title="Próximo passo">  ▶ próximo    </button>
+          <button class="ctrl" id="btnLast" title="Ir ao fim">      ⏭ fim        </button>
+          
+          <div class="speed-wrap">  velocidade
             <input type="range" id="speedRange" min="1" max="5" value="3" step="1" />
           </div>
         </div>
+
         <p class="kbd-hint">
           Controle pelo teclado: <kbd>→</kbd> próximo passo ·
           <kbd>←</kbd> passo anterior · <kbd>espaço</kbd> play/pause. Também
@@ -133,6 +129,7 @@
           <p id="resultText"></p>
           <div class="result-grid" id="resultGrid"></div>
         </div>
+        
       </div>
     </div>
 
@@ -142,7 +139,5 @@
       necessário — todas as restrições são ≤)
     </footer>
   </div>
-
 </body>
-
 </html>
